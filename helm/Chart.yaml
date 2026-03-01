@@ -1,0 +1,65 @@
+# Helm Chart for Payment Gateway
+# Directory Structure and Chart.yaml
+
+# Directory layout:
+# payment-gateway/
+# ├── Chart.yaml
+# ├── values.yaml
+# ├── values-dev.yaml
+# ├── values-staging.yaml
+# ├── values-prod.yaml
+# ├── templates/
+# │   ├── deployment.yaml
+# │   ├── service.yaml
+# │   ├── ingress.yaml
+# │   ├── configmap.yaml
+# │   ├── secret.yaml
+# │   ├── hpa.yaml
+# │   ├── pdb.yaml
+# │   ├── networkpolicy.yaml
+# │   ├── serviceaccount.yaml
+# │   ├── clusterrole.yaml
+# │   ├── clusterrolebinding.yaml
+# │   ├── pod-disruption-budget.yaml
+# │   ├── tests/
+# │   │   └── test-connection.yaml
+# │   └── NOTES.txt
+# └── README.md
+
+---
+
+# This file: Chart.yaml
+apiVersion: v2
+name: payment-gateway
+description: A Helm chart for deploying Payment Gateway to Kubernetes
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+
+# Chart metadata
+home: https://github.com/your-org/payment-gateway
+sources:
+  - https://github.com/your-org/payment-gateway
+maintainers:
+  - name: Platform Team
+    email: platform@company.com
+    url: https://company.com
+
+# Dependencies (optional, for subcharts)
+dependencies: []
+
+# Keywords for searching
+keywords:
+  - payment-gateway
+  - payments
+  - banking
+  - aspnet-core
+  - kubernetes
+  - helm
+
+# Icon
+icon: https://your-company.com/payment-gateway-icon.png
+
+# Repository
+kubeVersion: ">=1.24.0"
+engine: gotpl

@@ -1,0 +1,96 @@
+# Staging environment configuration for payment-gateway Helm chart
+
+global:
+  environment: staging
+  namespace: payment-gateway-staging
+
+image:
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit: "500"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: payment-gateway-staging.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: payment-gateway-staging-tls
+      hosts:
+        - payment-gateway-staging.example.com
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 500m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 75
+  targetMemoryUtilizationPercentage: 80
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+config:
+  bank:
+    authorizeEndpoint: https://staging-bank-api.example.com/authorize
+    timeoutSeconds: 20
+    maxRetries: 2
+    circuitBreakerThresholdFailures: 4
+  logging:
+    level: Information
+    includeScopes: false
+
+livenessProbe:
+  initialDelaySeconds: 20
+  periodSeconds: 10
+
+readinessProbe:
+  initialDelaySeconds: 10
+  periodSeconds: 5
+
+networkPolicy:
+  enabled: true
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8080"
+  prometheus.io/interval: "30s"
+
+nodeSelector:
+  workload: backend
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - payment-gateway
+          topologyKey: kubernetes.io/hostname
+
+debug:
+  enabled: false

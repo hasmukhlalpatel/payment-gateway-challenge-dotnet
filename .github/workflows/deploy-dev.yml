@@ -1,0 +1,72 @@
+name: Deploy to Development
+
+on:
+  push:
+    branches: [ develop ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  AZURE_RESOURCE_GROUP: payment-gateway-rg
+  AZURE_APP_NAME: payment-gateway-app-dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: development
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Build and publish
+      run: |
+        dotnet publish PaymentGateway.Api/PaymentGateway.Api.csproj \
+          --configuration Release \
+          --output ./publish
+
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Deploy to Azure App Service
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_APP_NAME }}
+        package: ./publish
+
+    - name: Run smoke tests
+      run: |
+        echo "Waiting for app to be ready..."
+        sleep 30
+        
+        APP_URL="https://${{ env.AZURE_APP_NAME }}.azurewebsites.net"
+        
+        echo "Testing health endpoint..."
+        curl -f "$APP_URL/health" || exit 1
+        
+        echo "Testing API documentation..."
+        curl -f "$APP_URL/swagger" || exit 1
+
+    - name: Create deployment annotation in App Insights
+      uses: azure/cli@v1
+      with:
+        azcliversion: latest
+        inlineScript: |
+          az monitor app-insights component tag create \
+            --app-id ${{ env.AZURE_APP_NAME }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --tags DeploymentStatus='Success' CommitSha='${{ github.sha }}' \
+            2>/dev/null || true
