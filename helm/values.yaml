@@ -1,0 +1,394 @@
+# Default values for payment-gateway Helm chart
+# This is a YAML-formatted file declaring variables to be passed into templates
+
+# ============================================================================
+# Global Configuration
+# ============================================================================
+
+global:
+  environment: dev
+  region: eastus
+  namespace: payment-gateway
+
+# ============================================================================
+# Image Configuration
+# ============================================================================
+
+image:
+  # Container image registry
+  registry: acr.azurecr.io
+  # Image repository
+  repository: payment-gateway/api
+  # Image tag (if not specified, defaults to appVersion in Chart.yaml)
+  tag: "1.0.0"
+  # Image pull policy
+  pullPolicy: IfNotPresent
+
+# Image pull secrets (for private registries)
+imagePullSecrets:
+  - name: acr-secret
+
+# ============================================================================
+# Replica Configuration
+# ============================================================================
+
+replicaCount: 2
+
+# ============================================================================
+# Deployment Strategy
+# ============================================================================
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+# ============================================================================
+# Service Configuration
+# ============================================================================
+
+service:
+  # Service type
+  type: ClusterIP
+  # Service port
+  port: 80
+  # Target port on container
+  targetPort: 5000
+  # Protocol
+  protocol: TCP
+  # Node port (only for NodePort service type)
+  nodePort: null
+  # Annotations
+  annotations: {}
+  # Labels
+  labels: {}
+  # Load balancer IP (for LoadBalancer type)
+  loadBalancerIP: null
+  # Load balancer source ranges
+  loadBalancerSourceRanges: []
+
+# ============================================================================
+# Ingress Configuration
+# ============================================================================
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+  hosts:
+    - host: payment-gateway.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: payment-gateway-tls
+      hosts:
+        - payment-gateway.example.com
+
+# ============================================================================
+# Resource Requests and Limits
+# ============================================================================
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 500m
+    memory: 256Mi
+
+# ============================================================================
+# Autoscaling Configuration
+# ============================================================================
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# ============================================================================
+# Health Checks
+# ============================================================================
+
+livenessProbe:
+  enabled: true
+  httpGet:
+    path: /health/live
+    port: 5000
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+  successThreshold: 1
+
+readinessProbe:
+  enabled: true
+  httpGet:
+    path: /health/ready
+    port: 5000
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+  successThreshold: 1
+
+startupProbe:
+  enabled: true
+  httpGet:
+    path: /health/live
+    port: 5000
+  initialDelaySeconds: 0
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 30
+
+# ============================================================================
+# Pod Disruption Budget
+# ============================================================================
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# ============================================================================
+# Pod Security Policy
+# ============================================================================
+
+podSecurityPolicy:
+  enabled: true
+  name: restricted
+
+# ============================================================================
+# Network Policy
+# ============================================================================
+
+networkPolicy:
+  enabled: true
+  # Allowed ingress from
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+  # Allowed egress to
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 443
+
+# ============================================================================
+# Container Configuration
+# ============================================================================
+
+container:
+  # Container port
+  port: 5000
+  # Protocol
+  protocol: TCP
+  # Environment variables
+  env:
+    ASPNETCORE_ENVIRONMENT: Production
+    ASPNETCORE_URLS: http://+:5000
+    Logging__LogLevel__Default: Information
+  # Environment variables from ConfigMap/Secret
+  envFrom: []
+
+# ============================================================================
+# Security Context
+# ============================================================================
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  capabilities:
+    drop:
+      - ALL
+    add:
+      - NET_BIND_SERVICE
+
+# ============================================================================
+# Node Affinity
+# ============================================================================
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - payment-gateway
+          topologyKey: kubernetes.io/hostname
+
+# ============================================================================
+# Node Selection
+# ============================================================================
+
+nodeSelector: {}
+
+# Tolerations for node taints
+tolerations: []
+
+# ============================================================================
+# Persistence Configuration
+# ============================================================================
+
+persistence:
+  enabled: false
+  storageClassName: "default"
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+  mountPath: /var/lib/payment-gateway
+  annotations: {}
+
+# ============================================================================
+# Application Configuration
+# ============================================================================
+
+config:
+  # Bank service configuration
+  bank:
+    authorizeEndpoint: https://bank-api.example.com/authorize
+    timeoutSeconds: 30
+    maxRetries: 3
+    retryDelayMilliseconds: 100
+    circuitBreakerThresholdFailures: 5
+    circuitBreakerTimeoutSeconds: 60
+    bulkheadMaxParallelization: 20
+    bulkheadMaxQueueingActions: 50
+  
+  # Logging configuration
+  logging:
+    level: Information
+    includeScopes: false
+    excludeNamespaces:
+      - Microsoft
+      - System
+  
+  # Monitoring configuration
+  monitoring:
+    applicationInsights:
+      enabled: true
+      samplingPercentage: 100
+    metrics:
+      enabled: true
+      port: 8080
+
+# ============================================================================
+# Secrets Configuration
+# ============================================================================
+
+secrets:
+  # Create secrets
+  create: true
+  # Use existing secret
+  name: payment-gateway-secrets
+  # Secret data (base64 encoded or will be auto-encoded by Kubernetes)
+  data:
+    BankApiKey: ""  # Set via helm values
+    EncryptionKey: ""  # Set via helm values
+    AppInsightsKey: ""  # Set via helm values
+
+# ============================================================================
+# Service Account
+# ============================================================================
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: payment-gateway
+
+# ============================================================================
+# RBAC Configuration
+# ============================================================================
+
+rbac:
+  create: true
+  # ClusterRole rules
+  rules:
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: [""]
+      resources: ["pods/log"]
+      verbs: ["get"]
+
+# ============================================================================
+# Monitoring and Observability
+# ============================================================================
+
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    port: 8080
+    path: /metrics
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    scrapeTimeout: 10s
+
+# ============================================================================
+# Logging Configuration
+# ============================================================================
+
+logging:
+  enabled: true
+  fluentd:
+    enabled: false
+  filebeat:
+    enabled: false
+
+# ============================================================================
+# Pod Annotations
+# ============================================================================
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8080"
+  prometheus.io/path: "/metrics"
+
+# ============================================================================
+# Pod Labels
+# ============================================================================
+
+podLabels:
+  app: payment-gateway
+  version: v1
+
+# ============================================================================
+# Lifecycle Hooks
+# ============================================================================
+
+lifecycle:
+  preStop:
+    exec:
+      command: ["/bin/sh", "-c", "sleep 15"]
+
+# ============================================================================
+# Timeouts and Deadlines
+# ============================================================================
+
+terminationGracePeriodSeconds: 30
+
+# ============================================================================
+# Debug Configuration
+# ============================================================================
+
+debug:
+  enabled: false
+  # Log level for debugging
+  logLevel: Debug

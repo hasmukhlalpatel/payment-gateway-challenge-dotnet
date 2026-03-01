@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11520.95
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F36BD266-CD75-4438-9BF9-CD91CDB18F2B}"
 EndProject
@@ -9,28 +9,89 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentGateway.Api", "src\P
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{1EF69307-274F-458E-BBE8-4D390512A8C6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentGateway.Api.Tests", "test\PaymentGateway.Api.Tests\PaymentGateway.Api.Tests.csproj", "{3A92D8D6-0359-4752-91AE-D8A59622518A}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BEF455BF-E652-4B07-A6EB-F88478094E5C}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		docker-compose.yml = docker-compose.yml
+		Dockerfile = Dockerfile
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentGateway.Core", "src\PaymentGateway.Core\PaymentGateway.Core.csproj", "{9DE9F541-C39F-4EE9-8A39-FD3DDE0284CE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "infrastructure", "infrastructure", "{30C96713-D8B3-4778-A783-2CC4627F50F1}"
+	ProjectSection(SolutionItems) = preProject
+		infrastructure\dev.tfvars = infrastructure\dev.tfvars
+		infrastructure\main.tf = infrastructure\main.tf
+		infrastructure\prod.tfvars = infrastructure\prod.tfvars
+		infrastructure\staging.tfvars = infrastructure\staging.tfvars
+		infrastructure\TERRAFORM_GUIDE.md = infrastructure\TERRAFORM_GUIDE.md
+		infrastructure\TERRAFORM_QUICK_START.md = infrastructure\TERRAFORM_QUICK_START.md
+		infrastructure\variables.tf = infrastructure\variables.tf
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "helm", "helm", "{DAADA43B-EAFB-40C7-ADF4-6D0DE604F68F}"
+	ProjectSection(SolutionItems) = preProject
+		helm\Chart.yaml = helm\Chart.yaml
+		helm\deployment.yaml = helm\deployment.yaml
+		helm\HELM_GUIDE.md = helm\HELM_GUIDE.md
+		helm\HELM_KUBERNETES_SUMMARY.md = helm\HELM_KUBERNETES_SUMMARY.md
+		helm\ingress-and-rbac.yaml = helm\ingress-and-rbac.yaml
+		helm\QUICK_START.md = helm\QUICK_START.md
+		helm\values-dev.yaml = helm\values-dev.yaml
+		helm\values-prod.yaml = helm\values-prod.yaml
+		helm\values-staging.yaml = helm\values-staging.yaml
+		helm\values.yaml = helm\values.yaml
+		helm\_helpers.tpl = helm\_helpers.tpl
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{47CB403F-2A72-40CE-8BCA-2685D19ADB5E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{D162E639-4210-4080-BCD5-1EE797F64035}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\build-and-test.yml = .github\workflows\build-and-test.yml
+		.github\workflows\deploy-dev.yml = .github\workflows\deploy-dev.yml
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentGateway.Api.Integration.Tests", "test\PaymentGateway.Api.Integration.Tests\PaymentGateway.Api.Integration.Tests.csproj", "{43B33C6E-CE2C-4BCA-0CBB-052583CBFD72}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentGateway.Api.Unit.Tests", "test\PaymentGateway.Api.Unit.Tests\PaymentGateway.Api.Unit.Tests.csproj", "{4323839D-6723-ECFF-9B2F-EC1C9E1223E0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{3CD9AAA2-2097-4874-9C40-FFDE26EE8E43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3CD9AAA2-2097-4874-9C40-FFDE26EE8E43}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3CD9AAA2-2097-4874-9C40-FFDE26EE8E43}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3CD9AAA2-2097-4874-9C40-FFDE26EE8E43}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3A92D8D6-0359-4752-91AE-D8A59622518A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3A92D8D6-0359-4752-91AE-D8A59622518A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3A92D8D6-0359-4752-91AE-D8A59622518A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3A92D8D6-0359-4752-91AE-D8A59622518A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9DE9F541-C39F-4EE9-8A39-FD3DDE0284CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9DE9F541-C39F-4EE9-8A39-FD3DDE0284CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9DE9F541-C39F-4EE9-8A39-FD3DDE0284CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9DE9F541-C39F-4EE9-8A39-FD3DDE0284CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43B33C6E-CE2C-4BCA-0CBB-052583CBFD72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43B33C6E-CE2C-4BCA-0CBB-052583CBFD72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43B33C6E-CE2C-4BCA-0CBB-052583CBFD72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43B33C6E-CE2C-4BCA-0CBB-052583CBFD72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4323839D-6723-ECFF-9B2F-EC1C9E1223E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4323839D-6723-ECFF-9B2F-EC1C9E1223E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4323839D-6723-ECFF-9B2F-EC1C9E1223E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4323839D-6723-ECFF-9B2F-EC1C9E1223E0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{3CD9AAA2-2097-4874-9C40-FFDE26EE8E43} = {F36BD266-CD75-4438-9BF9-CD91CDB18F2B}
-		{3A92D8D6-0359-4752-91AE-D8A59622518A} = {1EF69307-274F-458E-BBE8-4D390512A8C6}
+		{9DE9F541-C39F-4EE9-8A39-FD3DDE0284CE} = {F36BD266-CD75-4438-9BF9-CD91CDB18F2B}
+		{D162E639-4210-4080-BCD5-1EE797F64035} = {47CB403F-2A72-40CE-8BCA-2685D19ADB5E}
+		{43B33C6E-CE2C-4BCA-0CBB-052583CBFD72} = {1EF69307-274F-458E-BBE8-4D390512A8C6}
+		{4323839D-6723-ECFF-9B2F-EC1C9E1223E0} = {1EF69307-274F-458E-BBE8-4D390512A8C6}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {62171A97-213B-42AC-985B-1F87AE282C13}
 	EndGlobalSection
 EndGlobal

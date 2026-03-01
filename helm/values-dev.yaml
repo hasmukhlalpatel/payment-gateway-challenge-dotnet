@@ -1,0 +1,74 @@
+# Development environment configuration for payment-gateway Helm chart
+
+global:
+  environment: dev
+  namespace: payment-gateway-dev
+
+image:
+  tag: "latest"
+  pullPolicy: Always
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-staging"
+  hosts:
+    - host: payment-gateway-dev.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: payment-gateway-dev-tls
+      hosts:
+        - payment-gateway-dev-example.com
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 250m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+
+podDisruptionBudget:
+  enabled: false
+
+debug:
+  enabled: true
+  logLevel: Debug
+
+config:
+  bank:
+    authorizeEndpoint: http://bank-simulator:8080/authorize
+    timeoutSeconds: 30
+  logging:
+    level: Debug
+    includeScopes: true
+
+livenessProbe:
+  initialDelaySeconds: 10
+  periodSeconds: 20
+
+readinessProbe:
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "5000"
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

@@ -1,0 +1,22 @@
+# For more info on HTTP files go to https://aka.ms/vs/httpfile
+@PaymentGateway.Api_HostAddress = https://localhost:7092
+
+GET {{PaymentGateway.Api_HostAddress}}/api/Payments/11111111-1111-1111-1111-111111111111
+Accept: application/json
+
+###
+
+POST {{PaymentGateway.Api_HostAddress}}/api/Payments/
+Accept: application/json
+Content-Type: application/json
+
+{
+  "cardNumber": "12345678901234",
+  "expiryMonth": 12,
+  "expiryYear": 2030,
+  "currency": "USD",
+  "amount": 1000,
+  "cvv": "123"
+}
+
+###

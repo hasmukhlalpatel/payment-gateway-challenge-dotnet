@@ -1,0 +1,137 @@
+# ingress.yaml
+{{- if .Values.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "payment-gateway.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "payment-gateway.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- range .Values.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ include "payment-gateway.fullname" $ }}
+                port:
+                  number: {{ $.Values.service.port }}
+          {{- end }}
+    {{- end }}
+{{- end }}
+
+---
+# networkpolicy.yaml
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "payment-gateway.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "payment-gateway.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "payment-gateway.selectorLabels" . | nindent 6 }}
+  policyTypes:
+  - Ingress
+  - Egress
+  {{- with .Values.networkPolicy.ingress }}
+  ingress:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.networkPolicy.egress }}
+  egress:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+
+---
+# clusterrole.yaml
+{{- if .Values.rbac.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "payment-gateway.fullname" . }}
+  labels:
+    {{- include "payment-gateway.labels" . | nindent 4 }}
+rules:
+{{- with .Values.rbac.rules }}
+  {{- toYaml . | nindent 2 }}
+{{- end }}
+{{- end }}
+
+---
+# clusterrolebinding.yaml
+{{- if .Values.rbac.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "payment-gateway.fullname" . }}
+  labels:
+    {{- include "payment-gateway.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "payment-gateway.fullname" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "payment-gateway.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}
+
+---
+# NOTES.txt
+1. Get the application URL by running these commands:
+{{- if .Values.ingress.enabled }}
+  {{- range .Values.ingress.hosts }}
+  https://{{ .host }}{{ .paths.path }}
+  {{- end }}
+{{- else if contains "NodePort" .Values.service.type }}
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "payment-gateway.fullname" . }})
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+{{- else if contains "LoadBalancer" .Values.service.type }}
+  NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+  You can watch the status of by running 'kubectl get svc -w {{ include "payment-gateway.fullname" . }} -n {{ .Release.Namespace }}'
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "payment-gateway.fullname" . }} --template="{{ "{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}" }}")
+  echo http://$SERVICE_IP:{{ .Values.service.port }}
+{{- else if contains "ClusterIP" .Values.service.type }}
+  kubectl port-forward svc/{{ include "payment-gateway.fullname" . }} 8080:{{ .Values.service.port }} -n {{ .Release.Namespace }}
+  echo "Visit http://127.0.0.1:8080 to access the application"
+{{- end }}
+
+2. Get the service details:
+  kubectl describe service {{ include "payment-gateway.fullname" . }} -n {{ .Release.Namespace }}
+
+3. Get the deployment status:
+  kubectl rollout status deployment/{{ include "payment-gateway.fullname" . }} -n {{ .Release.Namespace }}
+
+4. View logs:
+  kubectl logs -f deployment/{{ include "payment-gateway.fullname" . }} -n {{ .Release.Namespace }}
+
+5. Check health:
+  kubectl exec deployment/{{ include "payment-gateway.fullname" . }} -n {{ .Release.Namespace }} -- curl http://localhost:{{ .Values.container.port }}/health
